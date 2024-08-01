@@ -99,22 +99,23 @@ def decry(path,songInfo):
     # 对字节数组中的每个元素进行异或操作，异或的值是163
     for i in range(len(arr)):
         arr[i] ^= 163
+    filename=f"{os.path.dirname(path)}\\{re.sub(r'[<>:"/\\|?*]', '', songInfo["title"])}_{re.sub(r'[<>:"/\\|?*]', '', songInfo["ac"])}"
     #判断格式是FLAC还是mp3
     if arr[:4] == b"fLaC":
         # 将处理后的字节数组写入新的文件，文件名在原文件名后添加".flac"
-        with open(f"{os.path.dirname(path)}\\{songInfo["title"]}_{songInfo["ac"]}.flac", "wb") as f:
+        with open(f"{filename}.flac", "wb") as f:
             f.write(bytes(arr))
-            return f"{os.path.dirname(path)}\\{songInfo["title"]}_{songInfo["ac"]}.flac"
+            return f"{filename}.flac"
     elif arr[:20].find(b'ftyp') !=-1  or arr[:20].find(b'M4A') !=-1:
         # 将处理后的字节数组写入新的文件，文件名在原文件名后添加".m4a"
-        with open(f"{os.path.dirname(path)}\\{songInfo["title"]}_{songInfo["ac"]}.m4a", "wb") as f:
+        with open(f"{filename}.m4a", "wb") as f:
             f.write(bytes(arr))
-            return f"{os.path.dirname(path)}\\{songInfo["title"]}_{songInfo["ac"]}.m4a"
+            return f"{filename}.m4a"
     else:
         # 将处理后的字节数组写入新的文件，文件名在原文件名后添加".mp3"
-        with open(f"{os.path.dirname(path)}\\{songInfo["title"]}_{songInfo["ac"]}.mp3", "wb") as f:
+        with open(f"{filename}.mp3", "wb") as f:
             f.write(bytes(arr))
-            return f"{os.path.dirname(path)}\\{songInfo["title"]}_{songInfo["ac"]}.mp3"
+            return f"{filename}.mp3"
 def isFlac(path):
     """
     判断是否为FLAC文件
@@ -264,8 +265,26 @@ if len(argv) > 0:
     for item in argv:
         smartSetSongInfo(item,getSongInfo(item))
     print("所有任务均已完成!")
+    print("""===================================>网易云音乐缓存解密V2.1<===================================
+作者信息:①UC文件解密:在吾爱论坛和B站上都看过,个人推测B站,链接:https://www.bilibili.com/video/BV19g4y1y78b
+②还原音乐元数据信息,批量解密:
+bilibili:杂牌土豆粉,QQ:2540709491,开源仓库:https://github.com/2540709491/163UCtoFLAC,软件QQ交流群:590074502
+BILIBILI主页:https://space.bilibili.com/487041556
+③项目引用库:json,os,re,requests,mutagen
+作者声明:开源软件,禁止倒卖,仅供学习交流,请在下载后的120年内删除.
+功能:1.单文件解密,直接打开本EXE文件,2.多文件解密,多个uc缓存拖入软件打开
+""")
     os.system("pause")
 else:
+    print("""===================================>网易云音乐缓存解密V2.1<===================================
+作者信息:①UC文件解密:在吾爱论坛和B站上都看过,个人推测B站,链接:https://www.bilibili.com/video/BV19g4y1y78b
+②还原音乐元数据信息,批量解密:
+bilibili:杂牌土豆粉,QQ:2540709491,开源仓库:https://github.com/2540709491/163UCtoFLAC,软件QQ交流群:590074502
+BILIBILI主页:https://space.bilibili.com/487041556
+③项目引用库:json,os,re,requests,mutagen
+作者声明:开源软件,禁止倒卖,仅供学习交流,请在下载后的120年内删除.
+功能:1.单文件解密,直接打开本EXE文件,2.多文件解密,多个uc缓存拖入软件打开
+""")
     flac_path = (input("请输入uc缓存文件路径:\n").strip('"'))
     smartSetSongInfo(flac_path,getSongInfo(flac_path))
     os.system("pause")
