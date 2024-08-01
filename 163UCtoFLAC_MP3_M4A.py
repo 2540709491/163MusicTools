@@ -4,6 +4,7 @@ from mutagen.flac import FLAC, Picture
 from mutagen.mp3 import MP3
 from mutagen.id3 import ID3, TIT2, TPE1, TALB, TYER, APIC
 from mutagen.mp4 import MP4, MP4Cover
+
 # 获取ID
 def getSongIdByStr(filename):
     """
@@ -40,7 +41,7 @@ def getSongInfo(path):
             # 读取歌曲信息
             title = data.get("title")
             description = data.get("description")
-            image = requests.get(data.get("images")[0]).content
+            image = requests.get(f"{data.get("images")[0]}?param=256y256").content
             date = data.get('pubDate')
             date = datetime.strptime(date, '%Y-%m-%dT%H:%M:%S').year
             ac = re.search(r'由 (.*?) 演唱', description).group(1)
