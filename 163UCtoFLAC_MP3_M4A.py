@@ -4,7 +4,15 @@ from mutagen.flac import FLAC, Picture
 from mutagen.mp3 import MP3
 from mutagen.id3 import ID3, TIT2, TPE1, TALB, TYER, APIC
 from mutagen.mp4 import MP4, MP4Cover
-
+def decstr(str1):
+    """
+    合法化文件名,将*替换为(星号)
+    :param str1: 文件名
+    :return: 返回str
+    """
+    str1=re.sub(r'[<>:"/\\|?]', '', str1)
+    str1=re.sub(r'[*]',"(星号)",str1)
+    return str1;
 # 获取ID
 def getSongIdByStr(filename):
     """
@@ -66,7 +74,7 @@ def getSongInfo(path):
         date = None
         ac = None
         return {"title":title,"description":description,"image":image,"date":date,"ac":ac}
-def changeCover(img, au):
+def changeCoverForFLAC(img, au):
     """
     更改FLAC封面
     :param img:传入图片数据二进制
@@ -84,6 +92,22 @@ def changeCover(img, au):
     # 构造PICTURE块并添加到元数据中
     au.add_picture(p)
     return au
+def changeCoverForM4A(filename, cover):
+    """
+    为M4A文件添加封面
+    :param filename:媒体文件路径 
+    :param cover: 二进制封面数据
+    :return: 无返回
+    """
+    audio = MP4(filename)
+    data = cover
+    covr = []
+    if data.startswith(b'\x89PNG'):
+        covr.append(MP4Cover(data, MP4Cover.FORMAT_PNG))
+    else:
+        covr.append(MP4Cover(data, MP4Cover.FORMAT_JPEG))
+    audio['covr'] = covr
+    audio.save()
 def decry(path,songInfo):
     """
     解密网易云音乐媒体文件
@@ -100,7 +124,7 @@ def decry(path,songInfo):
     # 对字节数组中的每个元素进行异或操作，异或的值是163
     for i in range(len(arr)):
         arr[i] ^= 163
-    filename=f"{os.path.dirname(path)}\\{re.sub(r'[<>:"/\\|?*]', '', songInfo["title"])}_{re.sub(r'[<>:"/\\|?*]', '', songInfo["ac"])}"
+    filename=f"{os.path.dirname(path)}\\{decstr(songInfo["title"])}_{decstr( songInfo["ac"])}"
     #判断格式是FLAC还是mp3
     if arr[:4] == b"fLaC":
         # 将处理后的字节数组写入新的文件，文件名在原文件名后添加".flac"
@@ -160,7 +184,7 @@ def setSongInfoFLAC(path,songInfo):
     audio['album'] = songInfo["title"]
     audio.pprint()
     print(audio.tags)
-    audio = changeCover(songInfo["image"], audio)
+    audio = changeCoverForFLAC(songInfo["image"], audio)
     # 保存文件
     audio.save()
     print(f"[FLAC]封面和元数据信息已添加到 {path}")
@@ -173,33 +197,18 @@ def setSongInfoMP3(path, songInfo):
     """
     # 打开MP3文件
     audio = MP3(path, ID3=ID3)
+    audio.update()
     # 设置歌曲信息
-    audio.tags.add(ID3)
     audio.tags["TIT2"] = TIT2(encoding=3, text=songInfo["title"])  # 标题
     audio.tags["TPE1"] = TPE1(encoding=3, text=songInfo["ac"])    # 艺术家
     audio.tags["TALB"] = TALB(encoding=3, text=songInfo.get("album", ""))  # 专辑
     audio.tags["TYER"] = TYER(encoding=3, text=str(songInfo["date"]))  # 年份
-    audio.tags["APIC"] = APIC(encoding=3, mime=u"image/jpeg", type=3, desc=u"Cover", data=songInfo["image"])  # 封面
-
+    audio.tags["APIC"] = APIC(encoding=0, mime=u"image/jpeg", type=3, desc=u"Cover", data=songInfo["image"])  # 封面
+    
+    audio.pprint()
     # 保存文件
     audio.save()
     print(f"[MP3] 元数据信息已添加到 {path}")
-def addCoverForM4A(filename, cover):
-    """
-    为M4A文件添加封面
-    :param filename:媒体文件路径 
-    :param cover: 二进制封面数据
-    :return: 无返回
-    """
-    audio = MP4(filename)
-    data = cover
-    covr = []
-    if data.startswith(b'\x89PNG'):
-        covr.append(MP4Cover(data, MP4Cover.FORMAT_PNG))
-    else:
-        covr.append(MP4Cover(data, MP4Cover.FORMAT_JPEG))
-    audio['covr'] = covr
-    audio.save()
 def setSongInfoM4A(path, songInfo):
     """
     设置M4A文件信息
@@ -222,7 +231,7 @@ def setSongInfoM4A(path, songInfo):
     audio.save()  # 保存时指定ID3版本
     
     # 添加封面
-    addCoverForM4A(path,songInfo["image"])
+    changeCoverForM4A(path,songInfo["image"])
 
     
     # 保存文件
@@ -260,32 +269,25 @@ headers = {
     "upgrade-insecure-requests": "1",
     "user-agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/127.0.0.0 Safari/537.36 Edg/127.0.0.0",
 }
+versionCall="""===================================>网易云音乐缓存解密V2.3<===================================
+作者信息:①UC文件解密:在吾爱论坛和B站上都看过,个人推测B站,链接:https://www.bilibili.com/video/BV19g4y1y78b
+②还原音乐元数据信息,批量解密:
+bilibili:杂牌土豆粉,QQ:2540709491,开源仓库:https://github.com/2540709491/163UCtoFLAC,软件QQ交流群:590074502
+BILIBILI主页:https://space.bilibili.com/487041556
+③项目引用库:json,os,re,requests,mutagen
+作者声明:开源软件,禁止倒卖,仅供学习交流,请在下载后的120年内删除.
+功能:1.单文件解密,直接打开本EXE文件,2.多文件解密,多个uc缓存拖入软件打开
+"""
 # ---常量结束---
 argv=sys.argv[1:]
 if len(argv) > 0:
     for item in argv:
         smartSetSongInfo(item,getSongInfo(item))
     print("所有任务均已完成!")
-    print("""===================================>网易云音乐缓存解密V2.1<===================================
-作者信息:①UC文件解密:在吾爱论坛和B站上都看过,个人推测B站,链接:https://www.bilibili.com/video/BV19g4y1y78b
-②还原音乐元数据信息,批量解密:
-bilibili:杂牌土豆粉,QQ:2540709491,开源仓库:https://github.com/2540709491/163UCtoFLAC,软件QQ交流群:590074502
-BILIBILI主页:https://space.bilibili.com/487041556
-③项目引用库:json,os,re,requests,mutagen
-作者声明:开源软件,禁止倒卖,仅供学习交流,请在下载后的120年内删除.
-功能:1.单文件解密,直接打开本EXE文件,2.多文件解密,多个uc缓存拖入软件打开
-""")
+    print(versionCall)
     os.system("pause")
 else:
-    print("""===================================>网易云音乐缓存解密V2.1<===================================
-作者信息:①UC文件解密:在吾爱论坛和B站上都看过,个人推测B站,链接:https://www.bilibili.com/video/BV19g4y1y78b
-②还原音乐元数据信息,批量解密:
-bilibili:杂牌土豆粉,QQ:2540709491,开源仓库:https://github.com/2540709491/163UCtoFLAC,软件QQ交流群:590074502
-BILIBILI主页:https://space.bilibili.com/487041556
-③项目引用库:json,os,re,requests,mutagen
-作者声明:开源软件,禁止倒卖,仅供学习交流,请在下载后的120年内删除.
-功能:1.单文件解密,直接打开本EXE文件,2.多文件解密,多个uc缓存拖入软件打开
-""")
+    print(versionCall)
     flac_path = (input("请输入uc缓存文件路径:\n").strip('"'))
     smartSetSongInfo(flac_path,getSongInfo(flac_path))
     os.system("pause")
