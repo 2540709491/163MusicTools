@@ -1,9 +1,12 @@
 ﻿import json, os, re, requests, mutagen.id3, sys
+import time
+
 from datetime import datetime
 from mutagen.flac import FLAC, Picture
 from mutagen.mp3 import MP3
 from mutagen.id3 import ID3, TIT2, TPE1, TALB, TYER, APIC
 from mutagen.mp4 import MP4, MP4Cover
+保存目录=f"{os.path.dirname(sys.argv[0])}\\out"
 def decstr(str1):
     """
     合法化文件名,将*替换为(星号)
@@ -115,6 +118,9 @@ def decry(path,songInfo):
     :param songInfo: 参上getSongInfo
     :return: 返回解密后文件路径,自动命名
     """
+    if not os.path.exists(保存目录):
+        os.makedirs(f"{os.path.dirname(sys.argv[0])}\\out")
+    filename=f"{os.path.dirname(sys.argv[0])}\\out\\{decstr(songInfo["title"])}_{decstr( songInfo["ac"])}"
     # 解密uc文件
     with open(path, "rb") as f:
         # 读取文件内容
@@ -124,7 +130,8 @@ def decry(path,songInfo):
     # 对字节数组中的每个元素进行异或操作，异或的值是163
     for i in range(len(arr)):
         arr[i] ^= 163
-    filename=f"{os.path.dirname(path)}\\{decstr(songInfo["title"])}_{decstr( songInfo["ac"])}"
+    
+    
     #判断格式是FLAC还是mp3
     if arr[:4] == b"fLaC":
         # 将处理后的字节数组写入新的文件，文件名在原文件名后添加".flac"
@@ -279,15 +286,28 @@ BILIBILI主页:https://space.bilibili.com/487041556
 功能:1.单文件解密,直接打开本EXE文件,2.多文件解密,多个uc缓存拖入软件打开
 """
 # ---常量结束---
+
 argv=sys.argv[1:]
 if len(argv) > 0:
     for item in argv:
-        smartSetSongInfo(item,getSongInfo(item))
+        try:
+            smartSetSongInfo(item,getSongInfo(item))
+        except Exception as e:
+            print(f"处理失败!错误原因:\n{e}\n已将错误日志输出到软件根目录 -> error.log")
+            os.system("pause")
+            with open("error.log","a",encoding="utf-8") as f:
+                f.write(f"{time.time()}{e}")
     print("所有任务均已完成!")
     print(versionCall)
     os.system("pause")
 else:
     print(versionCall)
     flac_path = (input("请输入uc缓存文件路径:\n").strip('"'))
-    smartSetSongInfo(flac_path,getSongInfo(flac_path))
+    try:
+        smartSetSongInfo(flac_path,getSongInfo(flac_path))
+    except Exception as e:
+        print(f"处理失败!错误原因:\n{e}\n已将错误日志输出到软件根目录 -> error.log")
+        os.system("pause")
+        with open("error.log","a",encoding="utf-8") as f:
+            f.write(f"{time.time()}{e}")
     os.system("pause")
