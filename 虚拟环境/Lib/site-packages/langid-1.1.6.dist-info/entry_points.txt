@@ -1,0 +1,2 @@
+[console_scripts]
+langid = langid.langid:main
