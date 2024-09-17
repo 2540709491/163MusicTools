@@ -149,10 +149,9 @@ BILIBILI主页:https://space.bilibili.com/487041556
 功能:1.单文件补充歌词,打开exe文件2.多文件补充歌词,多个歌曲文件拖入软件打开
 """
 # ---常量结束---
-# songpath=input("请输入歌曲路径:\n").strip('"')
-# songpath="H:\\网易云音乐下载\\VipSongsDownload\\黑猫大少爷 - 与众不同.flac"
+
 argv=sys.argv[1:]
-if(input("是否将歌词下载到本地(否则将歌词内嵌到歌曲文件中,是则在内签歌词的基础上保存一份同名歌词文件)\n请输入,不输入则为否(Y/n):\n")) == 'Y':
+if(input("是否将歌词下载到本地(否则将歌词内嵌到歌曲文件中,是则在内嵌歌词的基础上保存一份同名歌词文件)\n请输入,不输入则为否(Y/n):\n")) == 'Y':
     is_downLrcToFile=True
 if len(argv) > 0:
     for song_path in argv:
